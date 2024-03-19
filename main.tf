@@ -9,10 +9,22 @@ data "aws_iam_policy_document" "idt_domain" {
 }
 
 resource "aws_iam_role" "sagemaker_domain_execution_role" {
-  name = "aws-test-sagemaker-domain-execution-iam-role"
-  path = "/"
-  assume_role_policy = data.aws_iam_policy_document.idt_domain.json
+  name               = "aws-test-sagemaker-domain-execution-iam-role"
+  path               = "/"
+  assume_role_policy = jsonencode({
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Principal": {
+          "Service": "lambda.amazonaws.com"
+        },
+        "Action": "sts:AssumeRole"
+      }
+    ]
+  })
 }
+
 
 resource "aws_iam_role_policy_attachment" "s3-fullaccess-role-policy-attach" {
   role       = "${aws_iam_role.sagemaker_domain_execution_role.name}"
@@ -36,6 +48,7 @@ resource "aws_iam_role_policy_attachment" "sagemaker-pipelineintegrations-role-p
   role       = "${aws_iam_role.sagemaker_domain_execution_role.name}"
   policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerPipelinesIntegrations"
 }
+
 
 resource "aws_sagemaker_domain" "aws_dugb_sagemaker_domain" {
   domain_name = "aws-retailmass-domain"
